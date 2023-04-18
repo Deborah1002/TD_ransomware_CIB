@@ -19,3 +19,10 @@ Setup
 Économiser des ressources: La vérification de l'existence d'un fichier token.bin permet d'économiser des ressources en évitant d'exécuter le processus de création et d'envoi des éléments cryptographiques inutilement. Cela peut également aider à réduire la charge sur le serveur CNC.
 
 Améliorer la discrétion: Si le ransomware vérifie d'abord l'existence d'un fichier token.bin, il peut éviter de se révéler inutilement à la victime et aux outils de détection en évitant d'exécuter des actions inutiles.
+
+
+Verifer et utiliser la clef
+
+4-La méthode check_key utilise HMAC avec l'algorithme de hachage SHA256 et le sel comme clé pour vérifier l'intégrité et l'authenticité de la clé candidate. La méthode set_key décode d'abord la clé candidate en base64, puis vérifie si elle est correcte en utilisant la méthode check_key. Si la clé est correcte, elle est définie comme self._key. Sinon, une exception est levée.
+
+
